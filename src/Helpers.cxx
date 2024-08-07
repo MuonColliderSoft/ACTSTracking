@@ -502,37 +502,25 @@ EVENT::LCCollection* getCollection(EVENT::LCEvent* evt,
   }
 }
 
-Acts::ParticleHypothesis convertParticle(const EVENT::MCParticle* mcParticle)
+Acts::ParticleHypothesis getParticleHypothesis(const EVENT::MCParticle* mcParticle)
 {
-  switch (mcParticle->getPDG()) {
+  switch (std::abs(mcParticle->getPDG())) {
   case 11:
     return Acts::ParticleHypothesis {Acts::PdgParticle::eElectron};
-  case -11:
-    return Acts::ParticleHypothesis {Acts::PdgParticle::ePositron};
   case 13:
     return Acts::ParticleHypothesis {Acts::PdgParticle::eMuon};
-  case -13:
-    return Acts::ParticleHypothesis {Acts::PdgParticle::eAntiMuon};
   case 15:
     return Acts::ParticleHypothesis {Acts::PdgParticle::eTau};
-  case -15:
-    return Acts::ParticleHypothesis {Acts::PdgParticle::eAntiTau};
   case 22:
     return Acts::ParticleHypothesis {Acts::PdgParticle::eGamma};
   case 111:
     return Acts::ParticleHypothesis {Acts::PdgParticle::ePionZero};
   case 211:
     return Acts::ParticleHypothesis {Acts::PdgParticle::ePionPlus};
-  case -211:
-    return Acts::ParticleHypothesis {Acts::PdgParticle::ePionMinus};
   case 2112:
     return Acts::ParticleHypothesis {Acts::PdgParticle::eNeutron};
-  case -2112:
-    return Acts::ParticleHypothesis {Acts::PdgParticle::eAntiNeutron};
   case 2212:
     return Acts::ParticleHypothesis {Acts::PdgParticle::eProton};
-  case -2212:
-    return Acts::ParticleHypothesis {Acts::PdgParticle::eAntiProton};
   }
 
   Acts::PdgParticle pdg = Acts::PdgParticle::eInvalid;

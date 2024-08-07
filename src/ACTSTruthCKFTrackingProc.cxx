@@ -152,7 +152,7 @@ void ACTSTruthCKFTrackingProc::processEvent(LCEvent* evt) {
         std::pow(_initialTrackError_relP * p / (p * p), 2);
 
     Acts::BoundTrackParameters seed(perigeeSurface, params, cov,
-                                    ACTSTracking::convertParticle(mcParticle));
+                                    ACTSTracking::getParticleHypothesis(mcParticle));
     seeds.push_back(seed);
   }
 

@@ -113,7 +113,16 @@ EVENT::TrackState* ACTS2Marlin_trackState(int location,
 EVENT::LCCollection* getCollection(EVENT::LCEvent* evt,
                                    const std::string& name);
 
-Acts::ParticleHypothesis convertParticle(const EVENT::MCParticle* mcParticle);
+//! Get particle hypothesis for a given MCParticle object
+/**
+ * The particle hypothesis is determined by the PDG code of the MCParticle. The
+ * absolute value is taken, as this is a requirement from ACTS.
+ *
+ * \param mcParticle MCParticle object for which to determine a hypothesis
+ *
+ * \return The ACTS particle hypothesis
+ */
+Acts::ParticleHypothesis getParticleHypothesis(const EVENT::MCParticle* mcParticle);
 
 }  // namespace ACTSTracking
 

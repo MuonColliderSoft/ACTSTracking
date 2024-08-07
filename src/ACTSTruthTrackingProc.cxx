@@ -332,7 +332,7 @@ void ACTSTruthTrackingProc::processEvent(LCEvent* evt) {
             Acts::Vector3(mcParticle->getVertex()));
 
     Acts::BoundTrackParameters initialparams(perigeeSurface, params,
-                                             cov, ACTSTracking::convertParticle(mcParticle));
+                                             cov, ACTSTracking::getParticleHypothesis(mcParticle));
     // reference Examples TruthTracking/ParticleSmearing.cpp
     streamlog_out(DEBUG) << "Initial Paramemeters" << std::endl
                          << initialparams << std::endl;
