@@ -11,6 +11,9 @@
 // ACTS
 #include <Acts/Definitions/Units.hpp>
 
+// ROOT
+#include <TH1.h>
+
 // ACTSTracking
 #include "ACTSAlgBase.hxx"
 #include "GeometryIdSelector.hxx"
