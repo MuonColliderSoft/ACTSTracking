@@ -199,7 +199,7 @@ std::tuple<edm4hep::TrackCollection,
 	MsgStream log(msgSvc(), name());
 	log << MSG::INFO << "Created " << spacePoints.size() << " space points" << endmsg;
 
-	auto seedEnd = std::chrono::high_resolution_clock::now();
+	auto hitEnd = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> hitDuration = hitEnd - hitStart;
 	m_histHitSetUp->Fill(hitDuration.count());
 
@@ -509,7 +509,7 @@ std::tuple<edm4hep::TrackCollection,
 		
 		auto trackEnd = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> trackDuration = trackEnd - trackStart;
-		m_histTrackBuild->Fill(trackDuration.count())
+		m_histTrackBuild->Fill(trackDuration.count());
 
 	}
 	
