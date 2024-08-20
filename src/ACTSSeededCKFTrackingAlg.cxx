@@ -9,6 +9,7 @@
 
 // Gaudi
 #include <GaudiKernel/MsgStream.h>
+#include <GaudiKernel/ITHistSvc.h>
 
 // ACTS
 #include <Acts/EventData/MultiTrajectory.hpp>
@@ -32,6 +33,9 @@
 #include "SeedSpacePoint.hxx"
 #include "SourceLink.hxx"
 
+// Standard
+#include <chrono>
+
 // Track fitting definitions
 using TrackFinderOptions = Acts::CombinatorialKalmanFilterOptions<
 	ACTSTracking::SourceLinkAccessor::Iterator, 
@@ -50,6 +54,24 @@ StatusCode ACTSSeededCKFTrackingAlg::initialize() {
 	log << MSG::INFO << "Initializing ACTSSeededCKFTrackingAlg" << endmsg;
 	// Initialize the base
 	StatusCode init = ACTSAlgBase::initialize();
+
+	// Initialize timing histograms
+	ITHistSvc* histSvc{nullptr};
+	StatusCode sc = service("THistSvc", histSvc);
+	if ( sc.isFailure() ) {
+		log << MSG::ERROR << "Could not locate HistSvc" << endmsg;
+		init = sc;
+	}
+	
+	m_histHitSetUp = new TH1F("TrackhitTime", "Time to Set Hits;Time", 20, 0, 10);
+        m_histEntireReco = new TH1F("RecoTime", "Time for Entire Reco;Time", 20, 0 , 20);
+        m_histSeedFinding = new TH1F("SeedTime", "Time to Find Seeds;Time", 20, 0, 10);
+        m_histTrackBuild = new TH1F("TrackTime", "Time to Build Tracks;Time", 20, 0, 10);
+
+	(void)histSvc->regHist("/histos/timing/track_hits", m_histHitSetUp);
+	(void)histSvc->regHist("/histos/timing/entire_reco", m_histEntireReco);
+	(void)histSvc->regHist("/histos/timing/seed_finding", m_histSeedFinding);
+	(void)histSvc->regHist("/histos/timing/track_building", m_histTrackBuild);
 
 	// Initialize seeding layers
 	std::vector<std::string> seedingLayers;
@@ -110,6 +132,7 @@ std::tuple<edm4hep::TrackCollection,
 	ACTSTracking::MeasurementContainer measurements;
 	ACTSTracking::SeedSpacePointContainer spacePoints;
 
+	auto hitStart = std::chrono::high_resolution_clock::now();
 	sourceLinks.reserve(sortedHits.size());
 	for (auto& hitPair : sortedHits) {
 		// Convert to Acts hit
@@ -175,6 +198,10 @@ std::tuple<edm4hep::TrackCollection,
 	
 	MsgStream log(msgSvc(), name());
 	log << MSG::INFO << "Created " << spacePoints.size() << " space points" << endmsg;
+
+	auto seedEnd = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> hitDuration = hitEnd - hitStart;
+	m_histHitSetUp->Fill(hitDuration.count());
 
 	// Run seeding + tracking algorithms
 	// Caches
@@ -343,6 +370,8 @@ std::tuple<edm4hep::TrackCollection,
 		std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 + finderCfg.deltaRMiddleMinSPRange,
 		up - finderCfg.deltaRMiddleMaxSPRange);                  // TODO investigate
 
+	auto entireStart = std::chrono::high_resolution_clock::now();
+	
 	std::vector<Acts::BoundTrackParameters> paramseeds;
 	
 	for (const auto [bottom, middle, top] : spacePointsGrouping) {
@@ -350,7 +379,9 @@ std::tuple<edm4hep::TrackCollection,
 
 		finder.createSeedsForGroup(finderOpts, state, spacePointsGrouping.grid(),
 			std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
-
+	
+		auto seedStart = std::chrono::high_resolution_clock::now();
+		
 		// Loop over seeds and get track parameters
 		paramseeds.clear();
 
@@ -432,7 +463,12 @@ std::tuple<edm4hep::TrackCollection,
 		}
 
 		log << MSG::DEBUG << "Seeds found: " << std::endl << paramseeds.size() << endmsg;
-
+		
+		auto seedEnd = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> seedDuration = seedEnd - seedStart;
+		m_histSeedFinding->Fill(seedDuration.count());
+	
+		
 		// Find the tracks
 		if (!m_runCKF) continue;
 
@@ -442,6 +478,8 @@ std::tuple<edm4hep::TrackCollection,
 		auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
 		TrackContainer tracks(trackContainer, trackStateContainer);
 
+		auto trackStart = std::chrono::high_resolution_clock::now();
+		
 		for (const auto& pseed : paramseeds) {
 			tracks.clear();
 
@@ -468,10 +506,17 @@ std::tuple<edm4hep::TrackCollection,
 				log << MSG::WARNING << "Track fit error: " << result.error() << endmsg;
 			}
 		}
-
+		
+		auto trackEnd = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> trackDuration = trackEnd - trackStart;
+		m_histTrackBuild->Fill(trackDuration.count())
 
 	}
-
+	
+	auto entireEnd = std::chrono::high_resolution_clock::now();	
+	std::chrono::duration<double> entireDuration = entireEnd - entireStart;
+	m_histEntireReco->Fill(entireDuration.count());
+	
 	return std::make_tuple(std::move(seedCollection), std::move(trackCollection));
 }
 

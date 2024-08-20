@@ -111,6 +111,15 @@ protected:
 	ACTSTracking::GeometryIdSelector m_seedGeometrySelection;
 	///@}
 
+	/**
+ 	 * @brief Timing Histograms
+ 	 */ 
+	///@{
+	TH1* m_histHitSetUp;
+	TH1* m_histEntireReco;
+	TH1* m_histSeedFinding;
+	TH1* m_histTrackBuild;
+	///@}
 	//uint32_t m_fitFails; // Counting fails across events is not parallization friendly :(
 };
 
