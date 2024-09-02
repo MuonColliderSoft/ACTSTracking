@@ -39,6 +39,7 @@ using TrackFinderOptions =
     Acts::CombinatorialKalmanFilterOptions<ACTSTracking::SourceLinkAccessor::Iterator,
                                         Acts::VectorMultiTrajectory>;
 using SSPoint = ACTSTracking::SeedSpacePoint;
+using SSPointGrid = Acts::CylindricalSpacePointGrid<SSPoint>;
 
 ACTSSeededCKFTrackingProc aACTSSeededCKFTrackingProc;
 
@@ -521,7 +522,7 @@ void ACTSSeededCKFTrackingProc::processEvent(LCEvent *evt) {
 
   Acts::Extent rRangeSPExtent;
 
-  Acts::CylindricalSpacePointGrid<SSPoint> grid =
+  SSPointGrid grid =
       Acts::CylindricalSpacePointGridCreator::createGrid<SSPoint>(
           gridCfg.toInternalUnits(), gridOpts.toInternalUnits());
   Acts::CylindricalSpacePointGridCreator::fillGrid(finderCfg, finderOpts, grid,
@@ -534,7 +535,7 @@ void ACTSSeededCKFTrackingProc::processEvent(LCEvent *evt) {
   auto spacePointsGrouping = Acts::CylindricalBinnedGroup<SSPoint>(
       std::move(grid), bottomBinFinder, topBinFinder);
 
-  Acts::SeedFinder<SSPoint> finder(finderCfg);
+  Acts::SeedFinder<SSPoint, SSPointGrid> finder(finderCfg);
   decltype(finder)::SeedingState state;
   std::vector<Acts::Seed<SSPoint>> seeds;
 
