@@ -18,8 +18,8 @@
 #include <Acts/Surfaces/PerigeeSurface.hpp>
 #include <Acts/TrackFinding/CombinatorialKalmanFilter.hpp>
 #include <Acts/TrackFinding/MeasurementSelector.hpp>
-#include <Acts/TrackFitting/GainMatrixSmoother.hpp>
 #include <Acts/TrackFitting/GainMatrixUpdater.hpp>
+#include <Acts/Utilities/TrackHelpers.hpp>
 
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -33,12 +33,7 @@ using namespace Acts::UnitLiterals;
 using TrackFinderOptions =
     Acts::CombinatorialKalmanFilterOptions<ACTSTracking::SourceLinkAccessor::Iterator,
                                            Acts::VectorMultiTrajectory>;
-/*
-using TrackFinderResult = Acts::Result<
-    Acts::CombinatorialKalmanFilterResult<ACTSTracking::SourceLink>>;
 
-using TrackFinderResultContainer = std::vector<TrackFinderResult>;
-*/
 ACTSTruthCKFTrackingProc aACTSTruthCKFTrackingProc;
 
 ACTSTruthCKFTrackingProc::ACTSTruthCKFTrackingProc()
@@ -265,7 +260,6 @@ void ACTSTruthCKFTrackingProc::processEvent(LCEvent* evt) {
   pOptions.maxSteps = 10000;
 
   Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
 
   Acts::MeasurementSelector measSel { measurementSelectorCfg };
   ACTSTracking::MeasurementCalibrator measCal { measurements };
@@ -277,9 +271,6 @@ void ACTSTruthCKFTrackingProc::processEvent(LCEvent* evt) {
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.smoother.connect<
-      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
-      &kfSmoother);
   extensions.measurementSelector
       .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
           &measSel);
@@ -322,9 +313,17 @@ void ACTSTruthCKFTrackingProc::processEvent(LCEvent* evt) {
     auto result = trackFinder.findTracks(seeds.at(iseed), ckfOptions, tracks);
     if (result.ok()) {
       const auto& fitOutput = result.value();
-      for (const auto& trackTip : fitOutput)
+      for (const auto& trackItem : fitOutput)
       {
-        std::cout << trackTip.chi2() << std::endl;
+        auto trackTip = tracks.makeTrack();
+        trackTip.copyFrom(trackItem, true);
+        auto smoothResult = Acts::smoothTrack(geometryContext(), trackTip);
+        if (!smoothResult.ok())
+        {
+          streamlog_out(DEBUG) << "Smooth failure: "
+            << smoothResult.error() << std::endl;
+          continue;
+        }
         EVENT::Track* track = ACTSTracking::ACTS2Marlin_track(
             trackTip, magneticField(), magCache,
             _caloFaceR, _caloFaceZ, geometryContext(), magneticFieldContext(), trackingGeometry());

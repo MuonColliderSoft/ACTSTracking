@@ -16,16 +16,14 @@
 #include <Acts/Propagator/EigenStepper.hpp>
 #include <Acts/Propagator/Navigator.hpp>
 #include <Acts/Propagator/Propagator.hpp>
-// #include <Acts/Seeding/BinFinder.hpp>
-// #include <Acts/Seeding/BinnedSPGroup.hpp>
 #include <Acts/Seeding/EstimateTrackParamsFromSeed.hpp>
 #include <Acts/Seeding/SeedFinder.hpp>
 #include <Acts/Seeding/SpacePointGrid.hpp>
 #include <Acts/Surfaces/PerigeeSurface.hpp>
 #include <Acts/TrackFinding/CombinatorialKalmanFilter.hpp>
 #include <Acts/TrackFinding/MeasurementSelector.hpp>
-#include <Acts/TrackFitting/GainMatrixSmoother.hpp>
 #include <Acts/TrackFitting/GainMatrixUpdater.hpp>
+#include <Acts/Utilities/TrackHelpers.hpp>
 
 using namespace Acts::UnitLiterals;
 
@@ -404,7 +402,6 @@ void ACTSSeededCKFTrackingProc::processEvent(LCEvent *evt) {
           Acts::Vector3{0., 0., 0.});
 
   Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
 
   Acts::MeasurementSelector measSel { measurementSelectorCfg };
   ACTSTracking::MeasurementCalibrator measCal { measurements };
@@ -416,9 +413,6 @@ void ACTSSeededCKFTrackingProc::processEvent(LCEvent *evt) {
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
-  extensions.smoother.connect<
-      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
-      &kfSmoother);
   extensions.measurementSelector
       .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
           &measSel);
@@ -672,8 +666,17 @@ void ACTSSeededCKFTrackingProc::processEvent(LCEvent *evt) {
       auto result = trackFinder.findTracks(paramseeds.at(iseed), ckfOptions, tracks);
       if (result.ok()) {
         const auto& fitOutput = result.value();
-        for (const TrackContainer::TrackProxy& trackTip : fitOutput)
+        for (const TrackContainer::TrackProxy& trackItem : fitOutput)
         {
+          auto trackTip = tracks.makeTrack();
+          trackTip.copyFrom(trackItem, true);
+          auto smoothResult = Acts::smoothTrack(geometryContext(), trackTip);
+          if (!smoothResult.ok())
+          {
+            streamlog_out(DEBUG) << "Smooth failure: "
+              << smoothResult.error() << std::endl;
+            continue;
+          }
           //
           // Helpful debug output
           streamlog_out(DEBUG) << "Trajectory Summary" << std::endl;
@@ -692,7 +695,8 @@ void ACTSSeededCKFTrackingProc::processEvent(LCEvent *evt) {
 
           // Make track object
           EVENT::Track *track = ACTSTracking::ACTS2Marlin_track(
-              trackTip, magneticField(), magCache, _caloFaceR, _caloFaceZ, geometryContext(), magneticFieldContext(), trackingGeometry());
+              trackTip, magneticField(), magCache, _caloFaceR, _caloFaceZ,
+              geometryContext(), magneticFieldContext(), trackingGeometry());
 
           // Save results
           trackCollection->addElement(track);
