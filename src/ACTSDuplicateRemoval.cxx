@@ -69,6 +69,7 @@ ACTSDuplicateRemoval::ACTSDuplicateRemoval(const std::string& name, ISvcLocator*
 				KeyValue("OutputTrackCollectionName", "DedupedTruthTracks")) {}
 
 edm4hep::TrackCollection ACTSDuplicateRemoval::operator()(const edm4hep::TrackCollection& trackCollection) const{
+	MsgStream log(msgSvc(), name());
 	// Make output collection
 	edm4hep::TrackCollection outputTracks;
 
@@ -110,5 +111,6 @@ edm4hep::TrackCollection ACTSDuplicateRemoval::operator()(const edm4hep::TrackCo
 		ACTSTracking::makeMutableTrack(&track, &newTrack);
 	}
 
+	log << MSG::DEBUG << "Collection Size: " << outputTracks.size() << "\nTotal: "<< total<< "  Added: " << added << endmsg;
 	return outputTracks;
 }

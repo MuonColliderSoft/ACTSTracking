@@ -69,6 +69,7 @@ edm4hep::TrackCollection FilterTracksAlg::operator()(const edm4hep::TrackCollect
 		auto newTrk = outputTracks.create();
 		ACTSTracking::makeMutableTrack(&trk, &newTrk);
 	}
-
+	MsgStream log(msgSvc(), name());
+	log << MSG::DEBUG << "Collection Size: " << outputTracks.size() << endmsg;
 	return outputTracks;
 }

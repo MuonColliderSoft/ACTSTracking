@@ -501,6 +501,7 @@ std::tuple<edm4hep::TrackCollection,
 
 					// Save results
 					trackCollection->push_back(*track);
+
 				}
 			} else {
 				log << MSG::WARNING << "Track fit error: " << result.error() << endmsg;
@@ -516,6 +517,7 @@ std::tuple<edm4hep::TrackCollection,
 	auto entireEnd = std::chrono::high_resolution_clock::now();	
 	std::chrono::duration<double> entireDuration = entireEnd - entireStart;
 	m_histEntireReco->Fill(entireDuration.count());
+	log << MSG::DEBUG << "Track Collection Size: " << trackCollection->size() << endmsg; 
 	
 	return std::make_tuple(std::move(seedCollection), std::move(trackCollection));
 }
