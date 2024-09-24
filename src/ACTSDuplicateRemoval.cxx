@@ -19,18 +19,16 @@ namespace ACTSTracking {
  */
 inline bool tracks_equal(const edm4hep::Track& trk1, const edm4hep::Track& trk2) {
 	// Get an iterator for the Track hits of the first Track
-	const auto& hits1 = trk1.getTrackerHits();
 	uint32_t hitOlap = 0;
 	// Loop through each track hit and see if it overlaps with the second track
-	for (const auto& hit1 : hits1) {
-		if (std::find(trk2.trackerHits_begin(), trk2.trackerHits_end(), hit1) != trk1.trackerHits_end()) {
+	for (size_t itrackHit = 0; itrackHit < trk1.trackerHits_size(); ++itrackHit) {
+		if (std::find(trk2.trackerHits_begin(), trk2.trackerHits_end(), trk1.getTrackerHits(itrackHit)) != trk2.trackerHits_end()) {
 			hitOlap++; // If it does overlap, increment hitOlap
 		}
 	}
 
 	// Smaller track count
-	uint32_t size = std::min(hits1.size(), trk2.getTrackerHits().size());
-
+	uint32_t size = std::min(trk1.trackerHits_size(), trk2.trackerHits_size());
 	return 2 * hitOlap > size;  // half of smaller track belong to larger track
 }
 
@@ -70,6 +68,7 @@ ACTSDuplicateRemoval::ACTSDuplicateRemoval(const std::string& name, ISvcLocator*
 
 edm4hep::TrackCollection ACTSDuplicateRemoval::operator()(const edm4hep::TrackCollection& trackCollection) const{
 	MsgStream log(msgSvc(), name());
+
 	// Make output collection
 	edm4hep::TrackCollection outputTracks;
 
@@ -79,19 +78,19 @@ edm4hep::TrackCollection ACTSDuplicateRemoval::operator()(const edm4hep::TrackCo
 		auto insertion_point = std::upper_bound(sortedInput.begin(), sortedInput.end(), track, ACTSTracking::track_duplicate_compare);
 		sortedInput.insert(insertion_point, track);
 	}
-	
+
 	int total = 0;
 	int dupes = 0;
 	int added = 0;
 	// Loop through all inputs and search for nearby equals
 	// Remove if they are too similar
 	std::vector<edm4hep::Track> finalTracks;
-	for (const auto& track : sortedInput) {
+	for (const edm4hep::Track& track : sortedInput) {
 		total++;
 		bool foundAnEqual = false;
 		int startIdx = (finalTracks.size() >= 10) ? finalTracks.size() - 10 : 0;
 		for (int i = startIdx; i < finalTracks.size(); ++i) {
-			auto otherTrack = finalTracks[i];
+			const edm4hep::Track& otherTrack = finalTracks[i];
 			if (!ACTSTracking::tracks_equal(track, otherTrack)) continue;
 			foundAnEqual = true;
 			dupes++;
@@ -106,11 +105,10 @@ edm4hep::TrackCollection ACTSDuplicateRemoval::operator()(const edm4hep::TrackCo
 		}
 	}
 
-	for (const auto& track : finalTracks) {
+	for (const auto track : finalTracks) {
 		auto newTrack = outputTracks.create();
 		ACTSTracking::makeMutableTrack(&track, &newTrack);
 	}
 
-	log << MSG::DEBUG << "Collection Size: " << outputTracks.size() << "\nTotal: "<< total<< "  Added: " << added << endmsg;
 	return outputTracks;
 }

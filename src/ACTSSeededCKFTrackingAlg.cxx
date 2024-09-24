@@ -480,10 +480,10 @@ std::tuple<edm4hep::TrackCollection,
 
 		auto trackStart = std::chrono::high_resolution_clock::now();
 		
-		for (const auto& pseed : paramseeds) {
+		for (std::size_t iseed =0; iseed < paramseeds.size(); ++iseed) {
 			tracks.clear();
 
-			auto result = trackFinder.findTracks(pseed, ckfOptions, tracks);
+			auto result = trackFinder.findTracks(paramseeds.at(iseed), ckfOptions, tracks);
 			if (result.ok()) {
 				const auto& fitOutput = result.value();
 				for (const TrackContainer::TrackProxy& trackTip : fitOutput) {
@@ -501,7 +501,7 @@ std::tuple<edm4hep::TrackCollection,
 
 					// Save results
 					trackCollection->push_back(*track);
-
+					
 				}
 			} else {
 				log << MSG::WARNING << "Track fit error: " << result.error() << endmsg;
