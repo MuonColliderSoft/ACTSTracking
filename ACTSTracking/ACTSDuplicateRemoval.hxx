@@ -49,8 +49,11 @@ namespace ACTSTracking {
  * 2. is only run with 1. is ambigious.
  */
 	bool track_duplicate_compare(const edm4hep::Track& trk1, const edm4hep::Track& trk2);
-
-
+	
+	/**
+ 	 * @TODO Remove this when comparison in edm4hep gets better.
+ 	 */ 
+	bool hitEqual(const edm4hep::TrackerHit& hit1, const edm4hep::TrackerHit& hit2);
 }  // namespace ACTSTracking
 
 #endif

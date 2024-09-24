@@ -17,19 +17,39 @@ namespace ACTSTracking {
  * @param tkr2 One of two tracks to compare
  * @return True if they share too many of the same Tracker Hits
  */
-inline bool tracks_equal(const edm4hep::Track& trk1, const edm4hep::Track& trk2) {
+inline bool tracks_equal(const edm4hep::Track& trk1, const edm4hep::Track& trk2, MsgStream log) {
 	// Get an iterator for the Track hits of the first Track
 	uint32_t hitOlap = 0;
 	// Loop through each track hit and see if it overlaps with the second track
 	for (size_t itrackHit = 0; itrackHit < trk1.trackerHits_size(); ++itrackHit) {
-		if (std::find(trk2.trackerHits_begin(), trk2.trackerHits_end(), trk1.getTrackerHits(itrackHit)) != trk2.trackerHits_end()) {
+		auto it = std::find_if(trk2.trackerHits_begin(), trk2.trackerHits_end(), [&](const auto& hit2){
+			return hitEqual(trk1.getTrackerHits(itrackHit), hit2);
+		});
+		if (it != trk2.trackerHits_end()) {
 			hitOlap++; // If it does overlap, increment hitOlap
 		}
 	}
 
 	// Smaller track count
 	uint32_t size = std::min(trk1.trackerHits_size(), trk2.trackerHits_size());
+	log<<MSG::WARNING<<hitOlap*2<<"   "<<size<<endmsg;
 	return 2 * hitOlap > size;  // half of smaller track belong to larger track
+}
+
+/**
+ * @brief Workaround function to get around comparision issue
+ * @TODO: This is to get around an issue in edm4hep
+ * @param hit1 A hit
+ * @param hits A hit
+ */
+bool hitEqual(const edm4hep::TrackerHit& hit1, const edm4hep::TrackerHit& hit2) {
+	return		hit1.getCellID() == hit2.getCellID() &&
+		     	hit1.getType() == hit2.getType() &&
+		     	hit1.getQuality() == hit2.getQuality() &&
+		     	hit1.getTime() == hit2.getTime() &&
+			hit1.getEDep() == hit2.getEDep() &&
+			hit1.getEDepError() == hit2.getEDepError() &&
+			hit1.getPosition() == hit2.getPosition();
 }
 
 /**
@@ -91,7 +111,8 @@ edm4hep::TrackCollection ACTSDuplicateRemoval::operator()(const edm4hep::TrackCo
 		int startIdx = (finalTracks.size() >= 10) ? finalTracks.size() - 10 : 0;
 		for (int i = startIdx; i < finalTracks.size(); ++i) {
 			const edm4hep::Track& otherTrack = finalTracks[i];
-			if (!ACTSTracking::tracks_equal(track, otherTrack)) continue;
+			log<<MSG::WARNING<<track.id()<<"\n"<<otherTrack.id()<<endmsg;
+			if (!ACTSTracking::tracks_equal(track, otherTrack,log)) continue;
 			foundAnEqual = true;
 			dupes++;
 			if (ACTSTracking::track_quality_compare(track, otherTrack)) {
