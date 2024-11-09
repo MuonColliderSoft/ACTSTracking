@@ -17,7 +17,7 @@ namespace ACTSTracking {
  * @param tkr2 One of two tracks to compare
  * @return True if they share too many of the same Tracker Hits
  */
-inline bool tracks_equal(const edm4hep::Track& trk1, const edm4hep::Track& trk2, MsgStream log) {
+inline bool tracks_equal(const edm4hep::Track& trk1, const edm4hep::Track& trk2) {
 	// Get an iterator for the Track hits of the first Track
 	uint32_t hitOlap = 0;
 	// Loop through each track hit and see if it overlaps with the second track
@@ -32,7 +32,6 @@ inline bool tracks_equal(const edm4hep::Track& trk1, const edm4hep::Track& trk2,
 
 	// Smaller track count
 	uint32_t size = std::min(trk1.trackerHits_size(), trk2.trackerHits_size());
-	log<<MSG::WARNING<<hitOlap*2<<"   "<<size<<endmsg;
 	return 2 * hitOlap > size;  // half of smaller track belong to larger track
 }
 
@@ -111,8 +110,8 @@ edm4hep::TrackCollection ACTSDuplicateRemoval::operator()(const edm4hep::TrackCo
 		int startIdx = (finalTracks.size() >= 10) ? finalTracks.size() - 10 : 0;
 		for (int i = startIdx; i < finalTracks.size(); ++i) {
 			const edm4hep::Track& otherTrack = finalTracks[i];
-			log<<MSG::WARNING<<track.id()<<"\n"<<otherTrack.id()<<endmsg;
-			if (!ACTSTracking::tracks_equal(track, otherTrack,log)) continue;
+
+			if (!ACTSTracking::tracks_equal(track, otherTrack)) continue;
 			foundAnEqual = true;
 			dupes++;
 			if (ACTSTracking::track_quality_compare(track, otherTrack)) {

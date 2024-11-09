@@ -26,12 +26,12 @@ std::tuple<edm4hep::MCRecoTrackerHitPlaneAssociationCollection> ACTSMergeRelatio
 	// Initialize new collection
 	edm4hep::MCRecoTrackerHitPlaneAssociationCollection mergedCollection;
 
+	mergedCollection.setSubsetCollection();
+
 	// Loop over all item in all collections and add them to the new collection
 	for (const auto& col : {col1.getData(), col2.getData(), col3.getData(), col4.getData(), col5.getData(), col6.getData()}) {
 		for (const auto& item : *col) {
-			auto link = mergedCollection->create(item.getWeight());
-			link.setRec(item.getRec());
-			link.setSim(item.getSim());
+			mergedCollection.push_back(item);
 		}
 	}
 
