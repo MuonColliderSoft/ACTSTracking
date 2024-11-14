@@ -42,6 +42,7 @@ void FilterTracksAlg::buildBfield() {
 edm4hep::TrackCollection FilterTracksAlg::operator()(const edm4hep::TrackCollection& tracks) const{
 	// Create output collection
 	edm4hep::TrackCollection outputTracks;
+	outputTracks.setSubsetCollection();
 
 	// Filter tracks
 	for (const auto& trk : tracks) {
@@ -66,8 +67,7 @@ edm4hep::TrackCollection FilterTracksAlg::operator()(const edm4hep::TrackCollect
 		if (m_MinPt > 0 && pt < m_MinPt) continue; // pT check
 
 		// add tracks that pass all tests
-		auto newTrk = outputTracks.create();
-		ACTSTracking::makeMutableTrack(&trk, &newTrk);
+		outputTracks.push_back(trk);
 	}
 	MsgStream log(msgSvc(), name());
 	log << MSG::DEBUG << "Collection Size: " << outputTracks.size() << endmsg;
