@@ -59,7 +59,10 @@ struct FilterTracksAlg final : Gaudi::Functional::Transformer<edm4hep::TrackColl
 		Gaudi::Property<int> m_NHitsInner{this, "NHitsInner", 2, "Minimum number of hits on inner tracker"};
 		//! Cut off for number of hits in outer tracker (barrel and endcap combined)
 		Gaudi::Property<int> m_NHitsOuter{this, "NHitsOuter", 1, "Minimum number of hits on outer tracker"};
-
+		//! Cut off for D0
+		Gaudi::Property<float> m_MaxD0{this, "MaxD0", 5, "Maximum D0 value for a track"};
+		//! Cut off for Z0
+		Gaudi::Property<float> m_MaxZ0{this, "MaxZ0", 5, "Maximum Z0 value for a track"};
 		//! Cut off for momentum
 		Gaudi::Property<float> m_MinPt{this, "MinPt", 1.0, "Minimum transverse momentum"};  // units GeV
 

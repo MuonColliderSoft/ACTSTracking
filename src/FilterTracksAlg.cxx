@@ -62,7 +62,11 @@ edm4hep::TrackCollection FilterTracksAlg::operator()(const edm4hep::TrackCollect
                         int nhitouter = trk.getSubdetectorHitNumbers(5) + trk.getSubdetectorHitNumbers(6);
                         if (nhitouter <= m_NHitsVertex) continue;
                 }
-
+		float trackD0 = trk.getTrackStates(0).D0;
+		float trackZ0 = trk.getTrackStates(0).Z0;
+		if (fabs(trackD0) > m_MaxD0) continue;
+		if (fabs(trackZ0) > m_MaxZ0) continue;
+	
 		float pt = fabs(0.3 * m_Bz / trk.getTrackStates(edm4hep::TrackState::AtIP).omega / 1000);
 		if (m_MinPt > 0 && pt < m_MinPt) continue; // pT check
 
