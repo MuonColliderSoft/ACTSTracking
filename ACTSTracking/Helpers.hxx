@@ -50,20 +50,6 @@ using TrackResult = Acts::TrackContainer<Acts::VectorTrackContainer,
  */
 std::string findFile(const std::string& inpath);
 
-//! Converts edm4hep Track to edm4hep Mutable Track class
-/**
- * Converted properties are:
- *  - Type, chi2, ndf, DEdx, DEdxError, RadiusOfInnerMostHit
- *  - All TrackerHits
- *  - All associated Tracks
- *  - All subdetector hit numbers
- *  - All TrackStates
- *  - Dx Qualities
- * \param track Track to be converted
- * \param newTrack MutableTrack to convert to
- */
-void makeMutableTrack(const edm4hep::Track* track, edm4hep::MutableTrack* newTrack);
-
 //! Convert ACTS KF result to edm4hep track class
 /**
  * Converted properties are:

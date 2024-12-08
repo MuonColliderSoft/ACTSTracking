@@ -41,21 +41,6 @@ std::string findFile(const std::string& inpath) {
 	return inpath;
 }
 
-void makeMutableTrack(const edm4hep::Track* track, edm4hep::MutableTrack* newTrack) {
-	// Take every piece of information from the Track and put it in a new Mutable Track
-	newTrack->setType(track->getType());
-	newTrack->setChi2(track->getChi2());
-	newTrack->setNdf(track->getNdf());
-	newTrack->setDEdx(track->getDEdx());
-	newTrack->setDEdxError(track->getDEdxError());
-	newTrack->setRadiusOfInnermostHit(track->getRadiusOfInnermostHit());
-	for (auto& hit : track->getTrackerHits())                 { newTrack->addToTrackerHits(hit); }
-	for (auto& otherTrack : track->getTracks())               { newTrack->addToTracks(otherTrack); }
-	for (auto& hitNumber : track->getSubdetectorHitNumbers()) { newTrack->addToSubdetectorHitNumbers(hitNumber); }
-	for (auto& state : track->getTrackStates())               { newTrack->addToTrackStates(state); }
-	for (auto& quantity : track->getDxQuantities())           { newTrack->addToDxQuantities(quantity); }
-}
-
 edm4hep::MutableTrack* ACTS2edm4hep_track(const TrackResult& fitter_res,
 				  std::shared_ptr<Acts::MagneticFieldProvider> magneticField,
 				  Acts::MagneticFieldProvider::Cache& magCache) {
@@ -89,15 +74,9 @@ edm4hep::MutableTrack* ACTS2edm4hep_track(const TrackResult& fitter_res,
 		if (!trk_state.hasUncalibratedSourceLink()) continue;
 
 		auto sl = trk_state.getUncalibratedSourceLink().get<ACTSTracking::SourceLink>();
-		/// @TODO: This is a workaround. Once TrackerHit Interface works, you should just be able to pass TrackerHitPlane.
-		edm4hep::TrackerHit curr_hit(sl.edm4hepTHitP()->getCellID(),
-                                             sl.edm4hepTHitP()->getType(),
-                                             sl.edm4hepTHitP()->getQuality(),
-                                             sl.edm4hepTHitP()->getTime(),
-                                             sl.edm4hepTHitP()->getEDep(),
-                                             sl.edm4hepTHitP()->getEDepError(),
-                                             sl.edm4hepTHitP()->getPosition(),
-                                             sl.edm4hepTHitP()->getCovMatrix());;
+
+		edm4hep::TrackerHit curr_hit(*sl.edm4hepTHitP());
+
 		hitsOnTrack.push_back(curr_hit);
 
 		const Acts::Vector3 hitPos(curr_hit.getPosition().x, 

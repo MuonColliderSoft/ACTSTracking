@@ -17,8 +17,8 @@ DECLARE_COMPONENT(FilterTracksAlg)
 
 // Implement constructor
 FilterTracksAlg::FilterTracksAlg(const std::string& name, ISvcLocator* pSvcLocator) : Transformer(name, pSvcLocator,
-		KeyValue("InputTrackCollectionName", "Tracks"),
-		KeyValue("OutputTrackCollectionName", "FilteredTracks")) {}
+		KeyValues("InputTrackCollectionName", {"Tracks"}),
+		KeyValues("OutputTrackCollectionName", {"FilteredTracks"})) {}
 
 StatusCode FilterTracksAlg::initialize() {
 	// Set up magnetic field

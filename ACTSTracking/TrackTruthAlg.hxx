@@ -4,16 +4,12 @@
 // edm4hep
 #include <edm4hep/TrackCollection.h>
 #include <edm4hep/MCParticleCollection.h>
-#include <edm4hep/MCRecoTrackParticleAssociationCollection.h>
-#include <edm4hep/MCRecoTrackerHitPlaneAssociationCollection.h>
-
-// Gaudi
-#include <GaudiAlg/GaudiAlgorithm.h>
-#include <GaudiAlg/Transformer.h>
-#include <k4FWCore/BaseClass.h>
+#include <edm4hep/TrackMCParticleLinkCollection.h>
+#include <edm4hep/TrackerHitSimTrackerHitLinkCollection.h>
 
 // k4FWCore
 #include <k4FWCore/DataHandle.h>
+#include <k4FWCore/Transformer.h>
 
 // Standard
 #include <string>
@@ -31,9 +27,9 @@
  * @author Samuel Ferraro, Unknown
  */
 
-struct TrackTruthAlg final : Gaudi::Functional::MultiTransformer<std::tuple<edm4hep::MCRecoTrackParticleAssociationCollection>(
+struct TrackTruthAlg final : k4FWCore::MultiTransformer<std::tuple<edm4hep::TrackMCParticleLinkCollection>(
 			const edm4hep::TrackCollection &, 
-			const edm4hep::MCRecoTrackerHitPlaneAssociationCollection &)> {
+			const edm4hep::TrackerHitSimTrackerHitLinkCollection &)> {
 public:
 	/**
          * @brief Constructor for TrackTruthAlg
@@ -48,9 +44,9 @@ public:
 	 * @param trackerHitRelations A merged collection of associations between tracker hits and sim tracker hits
          * @return An association collection connecting Tracks to MCParticles
          */
-	std::tuple<edm4hep::MCRecoTrackParticleAssociationCollection> operator()(
+	std::tuple<edm4hep::TrackMCParticleLinkCollection> operator()(
 			const edm4hep::TrackCollection& tracks,
-                        const edm4hep::MCRecoTrackerHitPlaneAssociationCollection& trackerHitRelations) const;
+                        const edm4hep::TrackerHitSimTrackerHitLinkCollection& trackerHitRelations) const;
 };
 
 #endif

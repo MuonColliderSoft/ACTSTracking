@@ -82,8 +82,8 @@ inline bool track_duplicate_compare(const edm4hep::Track& trk1, const edm4hep::T
 DECLARE_COMPONENT(ACTSDuplicateRemoval)
 
 ACTSDuplicateRemoval::ACTSDuplicateRemoval(const std::string& name, ISvcLocator* svcLoc) : Transformer(name, svcLoc,
-				KeyValue("InputTrackCollectionName", "TruthTracks"),
-				KeyValue("OutputTrackCollectionName", "DedupedTruthTracks")) {}
+		KeyValues("InputTrackCollectionName", {"TruthTracks"}),
+		KeyValues("OutputTrackCollectionName", {"DedupedTruthTracks"})) {}
 
 edm4hep::TrackCollection ACTSDuplicateRemoval::operator()(const edm4hep::TrackCollection& trackCollection) const{
 	MsgStream log(msgSvc(), name());

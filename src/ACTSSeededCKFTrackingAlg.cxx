@@ -445,16 +445,7 @@ std::tuple<edm4hep::TrackCollection,
 			// hits
 			for (const ACTSTracking::SeedSpacePoint *sp : seed.sp()) {
 				const ACTSTracking::SourceLink& sourceLink = sp->sourceLink();
-				/// @TODO: This is a workaround. Once edm4hep TrackerHit Interface work. This shouldn't be needed
-				edm4hep::TrackerHit trackHit(sourceLink.edm4hepTHitP()->getCellID(),
-							     sourceLink.edm4hepTHitP()->getType(),
-							     sourceLink.edm4hepTHitP()->getQuality(),
-							     sourceLink.edm4hepTHitP()->getTime(),
-							     sourceLink.edm4hepTHitP()->getEDep(),
-							     sourceLink.edm4hepTHitP()->getEDepError(),
-							     sourceLink.edm4hepTHitP()->getPosition(),
-							     sourceLink.edm4hepTHitP()->getCovMatrix());
-				seedTrack.addToTrackerHits(trackHit);
+				seedTrack.addToTrackerHits(*(sourceLink.edm4hepTHitP()));//trackHit);
 			}
 
 			seedTrack.addToTrackStates(*seedTrackState);

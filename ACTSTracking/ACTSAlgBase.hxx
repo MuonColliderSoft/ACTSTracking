@@ -15,11 +15,11 @@
 
 // Gaudi
 #include <Gaudi/Property.h>
-#include <GaudiAlg/Transformer.h>
 
 // k4FWCore
 #include <k4FWCore/DataHandle.h>
 #include <k4FWCore/BaseClass.h>
+#include <k4FWCore/Transformer.h>
 
 // Standard
 #include <tuple>
@@ -41,7 +41,7 @@
  * @author Samuel Ferraro
  * @version $Id$
  */
-struct ACTSAlgBase : Gaudi::Functional::MultiTransformer<std::tuple<
+struct ACTSAlgBase : k4FWCore::MultiTransformer<std::tuple<
 		    edm4hep::TrackCollection, 
 		    edm4hep::TrackCollection>(
 		    const edm4hep::TrackerHitPlaneCollection &)> {

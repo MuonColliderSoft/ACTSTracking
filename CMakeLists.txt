@@ -18,7 +18,6 @@ gaudi_add_module(ACTSTrackingPlugins
 			k4FWCore::k4FWCore
 			DD4hep::DDCore
 			Gaudi::GaudiKernel
-			Gaudi::GaudiAlgLib
 			EDM4HEP::edm4hep
 			ActsCore ActsPluginTGeo ActsPluginJson)
 

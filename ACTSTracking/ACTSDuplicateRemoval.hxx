@@ -6,9 +6,7 @@
 #include <edm4hep/Track.h>
 
 // Gaudi
-#include <GaudiAlg/GaudiAlgorithm.h>
-#include <GaudiAlg/Transformer.h>
-#include <k4FWCore/BaseClass.h>
+#include <k4FWCore/Transformer.h>
 
 // k4FWCore
 #include <k4FWCore/DataHandle.h>
@@ -22,7 +20,7 @@
  * @author Samuel Ferraro
  * @version $Id$
  */
-struct ACTSDuplicateRemoval final : Gaudi::Functional::Transformer <edm4hep::TrackCollection(const edm4hep::TrackCollection&)> {
+struct ACTSDuplicateRemoval final : k4FWCore::Transformer<edm4hep::TrackCollection(const edm4hep::TrackCollection&)> {
 public:
 	/**
          * @brief Constructor for ACTSDuplicateRemoval

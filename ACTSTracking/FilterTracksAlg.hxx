@@ -4,13 +4,11 @@
 #include <edm4hep/TrackCollection.h>
 
 // Gaudi
-#include <GaudiAlg/GaudiAlgorithm.h>
-#include <GaudiAlg/Transformer.h>
 #include <Gaudi/Property.h>
-#include <k4FWCore/BaseClass.h>
 
 // k4FWCore
 #include <k4FWCore/DataHandle.h>
+#include <k4FWCore/Transformer.h>
 
 // Standard
 #include <memory>
@@ -23,7 +21,7 @@ namespace TrackPerf {}
  * @author Samuel Ferraro
  * @author Unknown
  */
-struct FilterTracksAlg final : Gaudi::Functional::Transformer<edm4hep::TrackCollection(const edm4hep::TrackCollection&)> {
+struct FilterTracksAlg final : k4FWCore::Transformer<edm4hep::TrackCollection(const edm4hep::TrackCollection&)> {
 	public:
 		/**
          	* @brief Constructor for FilterTracksAlg

@@ -8,25 +8,25 @@
 #include <edm4hep/SimTrackerHit.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackerHitPlane.h>
-#include <edm4hep/MCRecoTrackerHitPlaneAssociation.h>
+#include <edm4hep/TrackerHitSimTrackerHitLink.h>
 
 //------------------------------------------------------------------------------------------------
 
 DECLARE_COMPONENT(TrackTruthAlg)
 
 TrackTruthAlg::TrackTruthAlg(const std::string& name, ISvcLocator* svcLoc) : MultiTransformer(name, svcLoc, {
-		KeyValue("InputTrackCollectionName", "Tracks"),
-		KeyValue("InputTrackerHit2SimTrackerHitRelationName", "TrackMCRelation") },
-		{ KeyValue("OutputParticle2TrackRelationName", "Particle2TrackRelationName") })	{}
+		KeyValues("InputTrackCollectionName", {"Tracks"}),
+		KeyValues("InputTrackerHit2SimTrackerHitRelationName", {"TrackMCRelation"}) },
+		{ KeyValues("OutputParticle2TrackRelationName", {"Particle2TrackRelationName"}) })	{}
 
-std::tuple<edm4hep::MCRecoTrackParticleAssociationCollection> TrackTruthAlg::operator()(
+std::tuple<edm4hep::TrackMCParticleLinkCollection> TrackTruthAlg::operator()(
 			const edm4hep::TrackCollection& tracks,
-                        const edm4hep::MCRecoTrackerHitPlaneAssociationCollection& trackerHitRelations) const{
+                        const edm4hep::TrackerHitSimTrackerHitLinkCollection& trackerHitRelations) const{
 	// Map TrackerHits to SimTrackerHits
-	std::map<edm4hep::TrackerHitPlane, edm4hep::SimTrackerHit> trackerHit2SimHit;
+	std::map<edm4hep::TrackerHit, edm4hep::SimTrackerHit> trackerHit2SimHit;
 	for (const auto& hitRel : trackerHitRelations) {
-		auto trackerHit = hitRel.getRec();
-		auto simTrackerHit = hitRel.getSim();
+		edm4hep::TrackerHit trackerHit = hitRel.getFrom();
+		edm4hep::SimTrackerHit simTrackerHit = hitRel.getTo();
 		trackerHit2SimHit[trackerHit] = simTrackerHit;
 	}
 
@@ -42,15 +42,13 @@ std::tuple<edm4hep::MCRecoTrackParticleAssociationCollection> TrackTruthAlg::ope
 			const edm4hep::SimTrackerHit* simHit = nullptr;
 			/// @TODO: I am not happy with this. Again an edm4hep problem
 			for (const auto& pair : trackerHit2SimHit) {
-				if (pair.first.getCellID() == hit.getCellID() && pair.first.getType() == hit.getType() &&
-				    pair.first.getQuality() == hit.getQuality() && pair.first.getTime() == hit.getTime() &&
-				    pair.first.getPosition() == hit.getPosition()) {
+				if (pair.first == hit) {
 					simHit = (&pair.second);
 					break;
 				}
 			}
-			if (simHit->getMCParticle().isAvailable()) {
-				trackHit2Mc[simHit->getMCParticle()]++; //Increment MC Particle counter
+			if (simHit->getParticle().isAvailable()) {
+				trackHit2Mc[simHit->getParticle()]++; //Increment MC Particle counter
 			}
 		}
 
@@ -67,12 +65,12 @@ std::tuple<edm4hep::MCRecoTrackParticleAssociationCollection> TrackTruthAlg::ope
 	}
 
 	// Save the best matches
-	edm4hep::MCRecoTrackParticleAssociationCollection outColMC2T;
+	edm4hep::TrackMCParticleLinkCollection outColMC2T;
 	for (const auto& [mcParticle, track] : mcBestMatchTrack) {
-		edm4hep::MutableMCRecoTrackParticleAssociation association = outColMC2T.create();
-		association.setRec(track);
-		association.setSim(mcParticle);
-		association.setWeight(mcBestMatchFrac[mcParticle]);
+		edm4hep::MutableTrackMCParticleLink link = outColMC2T.create();
+		link.setFrom(track);
+		link.setTo(mcParticle);
+		link.setWeight(mcBestMatchFrac[mcParticle]);
 	}
 
 	return std::make_tuple(std::move(outColMC2T));

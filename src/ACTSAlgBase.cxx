@@ -31,10 +31,15 @@
 
 using namespace ACTSTracking;
 
-ACTSAlgBase::ACTSAlgBase(const std::string& name, ISvcLocator* svcLoc) : MultiTransformer(name, svcLoc, 
-		{ KeyValue("InputTrackerHitCollectionName", "TrackerHits") }, {
-		  KeyValue("OutputSeedCollectionName", "SeedTracks"),
-		  KeyValue("OutputTrackCollectionName", "Tracks") }) {}
+ACTSAlgBase::ACTSAlgBase(const std::string& name, ISvcLocator* svcLoc) : MultiTransformer(
+    name, svcLoc,
+    {KeyValues("InputMCParticleCollection", {"MCParticles"})},
+    {
+        KeyValues("OutputJetCollection", {"TruthJets"}),
+        KeyValues("OutputAssociationsCollection", {"TruthJetParticleAssociations"})
+    }
+) {}
+
 
 std::shared_ptr<GeometryIdMappingTool> ACTSAlgBase::geoIDMappingTool() const {
 	return m_geoIDMappingTool;
