@@ -56,22 +56,22 @@ StatusCode ACTSSeededCKFTrackingAlg::initialize() {
 	StatusCode init = ACTSAlgBase::initialize();
 
 	// Initialize timing histograms
-	ITHistSvc* histSvc{nullptr};
-	StatusCode sc = service("THistSvc", histSvc);
-	if ( sc.isFailure() ) {
-		log << MSG::ERROR << "Could not locate HistSvc" << endmsg;
-		init = sc;
-	}
-	
-	m_histHitSetUp = new TH1F("TrackhitTime", "Time to Set Hits;Time", 20, 0, 10);
-        m_histEntireReco = new TH1F("RecoTime", "Time for Entire Reco;Time", 20, 0 , 20);
-        m_histSeedFinding = new TH1F("SeedTime", "Time to Find Seeds;Time", 20, 0, 10);
-        m_histTrackBuild = new TH1F("TrackTime", "Time to Build Tracks;Time", 20, 0, 10);
+//	SmartIF<ITHistSvc> histSvc = service("THistSvc").as<ITHistSvc>();
+//	if (!histSvc) {
+  //  	  error() << "Failed to retrieve THistSvc" << endmsg;
+    //	  return StatusCode::FAILURE;
+//	}
 
-	(void)histSvc->regHist("/histos/timing/track_hits", m_histHitSetUp);
-	(void)histSvc->regHist("/histos/timing/entire_reco", m_histEntireReco);
-	(void)histSvc->regHist("/histos/timing/seed_finding", m_histSeedFinding);
-	(void)histSvc->regHist("/histos/timing/track_building", m_histTrackBuild);
+	
+//	m_histHitSetUp = new TH1F("TrackhitTime", "Time to Set Hits;Time", 20, 0, 10);
+  //      m_histEntireReco = new TH1F("RecoTime", "Time for Entire Reco;Time", 20, 0 , 20);
+    //    m_histSeedFinding = new TH1F("SeedTime", "Time to Find Seeds;Time", 20, 0, 10);
+      //  m_histTrackBuild = new TH1F("TrackTime", "Time to Build Tracks;Time", 20, 0, 10);
+
+//	(void)histSvc->regHist("/histos/timing/track_hits", m_histHitSetUp);
+//	(void)histSvc->regHist("/histos/timing/entire_reco", m_histEntireReco);
+//	(void)histSvc->regHist("/histos/timing/seed_finding", m_histSeedFinding);
+//	(void)histSvc->regHist("/histos/timing/track_building", m_histTrackBuild);
 
 	// Initialize seeding layers
 	std::vector<std::string> seedingLayers;
@@ -201,7 +201,7 @@ std::tuple<edm4hep::TrackCollection,
 
 	auto hitEnd = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> hitDuration = hitEnd - hitStart;
-	m_histHitSetUp->Fill(hitDuration.count());
+	//m_histHitSetUp->Fill(hitDuration.count());
 
 	// Run seeding + tracking algorithms
 	// Caches
@@ -457,7 +457,7 @@ std::tuple<edm4hep::TrackCollection,
 		
 		auto seedEnd = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> seedDuration = seedEnd - seedStart;
-		m_histSeedFinding->Fill(seedDuration.count());
+		//m_histSeedFinding->Fill(seedDuration.count());
 	
 		
 		// Find the tracks
@@ -501,13 +501,13 @@ std::tuple<edm4hep::TrackCollection,
 		
 		auto trackEnd = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> trackDuration = trackEnd - trackStart;
-		m_histTrackBuild->Fill(trackDuration.count());
+		//m_histTrackBuild->Fill(trackDuration.count());
 
 	}
 	
 	auto entireEnd = std::chrono::high_resolution_clock::now();	
 	std::chrono::duration<double> entireDuration = entireEnd - entireStart;
-	m_histEntireReco->Fill(entireDuration.count());
+	//m_histEntireReco->Fill(entireDuration.count());
 	log << MSG::DEBUG << "Track Collection Size: " << trackCollection->size() << endmsg; 
 	
 	return std::make_tuple(std::move(seedCollection), std::move(trackCollection));
