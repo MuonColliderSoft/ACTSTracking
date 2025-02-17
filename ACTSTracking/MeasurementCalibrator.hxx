@@ -37,18 +37,25 @@ class MeasurementCalibrator {
                  const Acts::SourceLink& sourceLink,
                  Acts::VectorMultiTrajectory::TrackStateProxy trackState) const
   {
-    trackState.setUncalibratedSourceLink(sourceLink);
-    const auto& idxSourceLink = sourceLink.get<ACTSTracking::SourceLink>();
+    trackState.setUncalibratedSourceLink(Acts::SourceLink{sourceLink});
+    const SourceLink& idxSourceLink = sourceLink.get<SourceLink>();
 
     assert((idxSourceLink.index() < m_measurements.size()) and
            "Source link index is outside the container bounds");
 
-    const auto meas = std::get<1>(m_measurements[idxSourceLink.index()]);
-    constexpr std::size_t kMeasurementSize = decltype(meas)::size();
+    const Measurement& measurement = m_measurements[idxSourceLink.index()];
 
-    trackState.allocateCalibrated(kMeasurementSize);
-    trackState.calibrated<kMeasurementSize>() = meas.parameters();
-    trackState.calibratedCovariance<kMeasurementSize>() = meas.covariance();
+    Acts::visit_measurement(measurement.size(), [&](auto N) -> void {
+      constexpr std::size_t kMeasurementSize = decltype(N)::value;
+
+      trackState.allocateCalibrated(kMeasurementSize);
+      trackState.calibrated<kMeasurementSize>() =
+          measurement.parameters<kMeasurementSize>();
+      trackState.calibratedCovariance<kMeasurementSize>() =
+          measurement.covariance<kMeasurementSize>();
+      trackState.setSubspaceIndices(
+          measurement.subspaceIndices<kMeasurementSize>());
+    });
   }
 
  private:

@@ -8,141 +8,210 @@
 #include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <array>
-#include <cstddef>
-#include <iosfwd>
 #include <variant>
 
 namespace ACTSTracking {
 
-template<typename indices_t, std::size_t kSize>
-class TMeasurement {
-	static constexpr std::size_t kFullSize = Acts::detail::kParametersSize<indices_t>;
-
-	using Subspace = Acts::detail::FixedSizeSubspace<kFullSize, kSize>;
-
+template <typename indices_t>
+class VariableSizeMeasurement {
 public:
-	using Scalar = Acts::ActsScalar;
-	using ParametersVector = Acts::ActsVector<kSize>;
-	using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
-	using FullParametersVector = Acts::ActsVector<kFullSize>;
-	using ProjectionMatrix = Acts::ActsMatrix<kSize, kFullSize>;
-	using ExpansionMatrix = Acts::ActsMatrix<kFullSize, kSize>;
+  static constexpr std::size_t kFullSize = Acts::detail::kParametersSize<indices_t>;
 
-	template<typename parameters_t, typename covariance_t>
-	TMeasurement(Acts::SourceLink&& source, const std::array<indices_t, kSize> &indices,
-			const Eigen::MatrixBase<parameters_t> &params,
-			const Eigen::MatrixBase<covariance_t> &cov) :
-			m_source(std::move(source)),
-			m_subspace(indices),
-			m_params(params),
-			m_cov(cov) {}
+  using Scalar = Acts::ActsScalar;
 
-	TMeasurement() = delete;
-	TMeasurement(const TMeasurement&) = default;
-	TMeasurement(TMeasurement&&) = default;
-	~TMeasurement() = default;
-	TMeasurement& operator=(const TMeasurement&) = default;
-	TMeasurement& operator=(TMeasurement&&) = default;
+  using SubspaceIndex = std::uint8_t;
+  using SubspaceIndices =
+      boost::container::static_vector<SubspaceIndex, kFullSize>;
 
-	const Acts::SourceLink& sourceLink() const {
-		return m_source;
-	}
+  /// Vector type containing for measured parameter values.
+  template <std::size_t dim>
+  using ParametersVector = Eigen::Matrix<Scalar, dim, 1>;
+  template <std::size_t dim>
+  using ParametersVectorMap = Eigen::Map<ParametersVector<dim>>;
+  template <std::size_t dim>
+  using ConstParametersVectorMap = Eigen::Map<const ParametersVector<dim>>;
+  using EffectiveParametersVector = Eigen::Matrix<Scalar, Eigen::Dynamic, 1>;
+  using EffectiveParametersVectorMap = Eigen::Map<EffectiveParametersVector>;
+  using ConstEffectiveParametersVectorMap = Eigen::Map<const EffectiveParametersVector>;
+  template <std::size_t dim>
+  using CovarianceMatrix = Eigen::Matrix<Scalar, dim, dim>;
+  template <std::size_t dim>
+  using CovarianceMatrixMap = Eigen::Map<CovarianceMatrix<dim>>;
+  template <std::size_t dim>
+  using ConstCovarianceMatrixMap = Eigen::Map<const CovarianceMatrix<dim>>;
+  using EffectiveCovarianceMatrix = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>;
+  using EffectiveCovarianceMatrixMap = Eigen::Map<EffectiveCovarianceMatrix>;
+  using ConstEffectiveCovarianceMatrixMap = Eigen::Map<const EffectiveCovarianceMatrix>;
 
-	static constexpr std::size_t size() {
-		return kSize;
-	}
+  using FullParametersVector = Acts::ActsVector<kFullSize>;
+  using FullCovarianceMatrix = Acts::ActsSquareMatrix<kFullSize>;
 
-	bool contains(indices_t i) const {
-		return m_subspace.contains(i);
-	}
+  using ProjectionMatrix = Eigen::Matrix<Scalar, Eigen::Dynamic, kFullSize>;
+  using ExpansionMatrix = Eigen::Matrix<Scalar, kFullSize, Eigen::Dynamic>;
 
-	constexpr std::array<indices_t, kSize> indices() const {
-		std::array < uint8_t, kSize > subInds = m_subspace.indices();
-		std::array<indices_t, kSize> inds { };
-		for (std::size_t i = 0; i < kSize; i++) {
-			inds[i] = static_cast<indices_t>(subInds[i]);
-		}
-		return inds;
-	}
+  template <typename other_indices_t, std::size_t kSize, typename parameters_t,
+            typename covariance_t>
+  VariableSizeMeasurement(
+      Acts::SourceLink source,
+      const std::array<other_indices_t, kSize>& subspaceIndices,
+      const Eigen::MatrixBase<parameters_t>& params,
+      const Eigen::MatrixBase<covariance_t>& cov)
+      : m_source(std::move(source))
+  {
+    static_assert(kSize == parameters_t::RowsAtCompileTime, "Parameter size mismatch");
+    static_assert(kSize == covariance_t::RowsAtCompileTime, "Covariance rows mismatch");
+    static_assert(kSize == covariance_t::ColsAtCompileTime, "Covariance cols mismatch");
 
-	const ParametersVector& parameters() const {
-		return m_params;
-	}
+    m_subspaceIndices.resize(subspaceIndices.size());
+    std::transform(subspaceIndices.begin(), subspaceIndices.end(),
+                   m_subspaceIndices.begin(), [](auto index) {
+                     return static_cast<SubspaceIndex>(index);
+                   });
 
-	const CovarianceMatrix& covariance() const {
-		return m_cov;
-	}
+    parameters<kSize>() = params;
+    covariance<kSize>() = cov;
+  }
 
-	ProjectionMatrix projector() const {
-		return m_subspace.template projector<Scalar>();
-	}
+  VariableSizeMeasurement() = delete;
+  VariableSizeMeasurement(const VariableSizeMeasurement&) = default;
+  VariableSizeMeasurement(VariableSizeMeasurement&&) = default;
+  ~VariableSizeMeasurement() = default;
+  VariableSizeMeasurement& operator=(const VariableSizeMeasurement&) = default;
+  VariableSizeMeasurement& operator=(VariableSizeMeasurement&&) = default;
 
-	ExpansionMatrix expander() const {
-		return m_subspace.template expander<Scalar>();
-	}
+  const Acts::SourceLink& sourceLink() const { return m_source; }
 
-	ParametersVector residuals(const FullParametersVector &reference) const {
-		ParametersVector res = ParametersVector::Zero();
-		Acts::detail::calculateResiduals(static_cast<indices_t>(kSize),
-				m_subspace.indices(), reference, m_params, res);
-		return res;
-	}
+  constexpr std::size_t size() const { return m_subspaceIndices.size(); }
 
-	std::ostream& operator<<(std::ostream &os) const {
-		Acts::detail::printMeasurement(os, static_cast<indices_t>(kSize),
-				m_subspace.indices().data(), m_params.data(), m_cov.data());
-		return os;
-	}
+  bool contains(indices_t i) const
+  {
+    return std::find(m_subspaceIndices.begin(), m_subspaceIndices.end(), i) !=
+           m_subspaceIndices.end();
+  }
+
+  std::size_t indexOf(indices_t i) const
+  {
+    auto it = std::find(m_subspaceIndices.begin(), m_subspaceIndices.end(), i);
+    assert(it != m_subspaceIndices.end());
+    return std::distance(m_subspaceIndices.begin(), it);
+  }
+
+  const SubspaceIndices& subspaceIndices() const { return m_subspaceIndices; }
+
+  template <std::size_t dim>
+  Acts::SubspaceIndices<dim> subspaceIndices() const
+  {
+    assert(dim == size());
+    Acts::SubspaceIndices<dim> result;
+    std::copy(m_subspaceIndices.begin(), m_subspaceIndices.end(),
+              result.begin());
+    return result;
+  }
+
+  Acts::BoundSubspaceIndices boundSubsetIndices() const
+  {
+    Acts::BoundSubspaceIndices result = Acts::kBoundSubspaceIndicesInvalid;
+    std::copy(m_subspaceIndices.begin(), m_subspaceIndices.end(),
+              result.begin());
+    return result;
+  }
+
+  template <std::size_t dim>
+  ConstParametersVectorMap<dim> parameters() const
+  {
+    assert(dim == size());
+    return ConstParametersVectorMap<dim>{m_params.data()};
+  }
+
+  template <std::size_t dim>
+  ParametersVectorMap<dim> parameters()
+  {
+    assert(dim == size());
+    return ParametersVectorMap<dim>{m_params.data()};
+  }
+
+  ConstEffectiveParametersVectorMap parameters() const
+  {
+    return ConstEffectiveParametersVectorMap{m_params.data(),
+                                             static_cast<Eigen::Index>(size())};
+  }
+
+  EffectiveParametersVectorMap parameters()
+  {
+    return EffectiveParametersVectorMap{m_params.data(),
+                                        static_cast<Eigen::Index>(size())};
+  }
+
+  template <std::size_t dim>
+  ConstCovarianceMatrixMap<dim> covariance() const
+  {
+    assert(dim == size());
+    return ConstCovarianceMatrixMap<dim>{m_cov.data()};
+  }
+
+  template <std::size_t dim>
+  CovarianceMatrixMap<dim> covariance()
+  {
+    assert(dim == size());
+    return CovarianceMatrixMap<dim>{m_cov.data()};
+  }
+
+  ConstEffectiveCovarianceMatrixMap covariance() const
+  {
+    return ConstEffectiveCovarianceMatrixMap{m_cov.data(),
+                                             static_cast<Eigen::Index>(size()),
+                                             static_cast<Eigen::Index>(size())};
+  }
+
+  EffectiveCovarianceMatrixMap covariance()
+  {
+    return EffectiveCovarianceMatrixMap{m_cov.data(),
+                                        static_cast<Eigen::Index>(size()),
+                                        static_cast<Eigen::Index>(size())};
+  }
+
+  FullParametersVector fullParameters() const
+  {
+    FullParametersVector result = FullParametersVector::Zero();
+    for (std::size_t i = 0; i < size(); ++i) {
+      result[m_subspaceIndices[i]] = parameters()[i];
+    }
+    return result;
+  }
+
+  FullCovarianceMatrix fullCovariance() const
+  {
+    FullCovarianceMatrix result = FullCovarianceMatrix::Zero();
+    for (std::size_t i = 0; i < size(); ++i) {
+      for (std::size_t j = 0; j < size(); ++j) {
+        result(m_subspaceIndices[i], m_subspaceIndices[j]) = covariance()(i, j);
+      }
+    }
+    return result;
+  }
 
 private:
-	Acts::SourceLink m_source;
-	Subspace m_subspace;
-	ParametersVector m_params;
-	CovarianceMatrix m_cov;
+  Acts::SourceLink m_source;
+  SubspaceIndices m_subspaceIndices;
+  std::array<Scalar, kFullSize> m_params{};
+  std::array<Scalar, kFullSize * kFullSize> m_cov{};
 };
 
-template<typename parameters_t, typename covariance_t, typename indices_t,
-		typename ... tail_indices_t>
-auto makeMeasurement(Acts::SourceLink source,
-		const Eigen::MatrixBase<parameters_t> &params,
-		const Eigen::MatrixBase<covariance_t> &cov, indices_t index0,
-		tail_indices_t ... tailIndices) ->
-				TMeasurement<indices_t, 1u + sizeof...(tail_indices_t)>
-{
-	using IndexContainer = std::array<indices_t, 1u + sizeof...(tail_indices_t)>;
-	return { std::move(source), IndexContainer {index0, tailIndices...}, params, cov };
-}
+using BoundVariableMeasurement = VariableSizeMeasurement<Acts::BoundIndices>;
 
-namespace detail {
+using Measurement = BoundVariableMeasurement;
 
-template<typename indices_t, std::size_t kN, std::size_t ... kSizes>
-struct VariantMeasurementGenerator :
-		VariantMeasurementGenerator<indices_t, kN - 1u, kN, kSizes...> {};
-
-template<typename indices_t, std::size_t ... kSizes>
-struct VariantMeasurementGenerator<indices_t, 0u, kSizes...> {
-	using Type = std::variant<TMeasurement<indices_t, kSizes>...>;
-};
-
-}  // namespace detail
-
-template<typename indices_t>
-using VariantMeasurement = typename detail::VariantMeasurementGenerator<indices_t,
-		Acts::detail::kParametersSize<indices_t>>::Type;
-
-using BoundVariantMeasurement = VariantMeasurement<Acts::BoundIndices>;
-
-using FreeVariantMeasurement = VariantMeasurement<Acts::FreeIndices>;
-
-using Measurement = BoundVariantMeasurement;
 using MeasurementContainer = std::vector<Measurement>;
 
-template<typename indices_t>
-std::ostream& operator<<(std::ostream &os, const VariantMeasurement<indices_t> &vm)
+template<typename parameters_t, typename covariance_t, typename indices_t,
+    typename ... tail_indices_t>
+VariableSizeMeasurement<indices_t> makeMeasurement(
+    Acts::SourceLink source, const Eigen::MatrixBase<parameters_t> &params,
+    const Eigen::MatrixBase<covariance_t> &cov, indices_t index0,
+    tail_indices_t ... tailIndices)
 {
-	return std::visit([&](const auto &m) {
-		return (os << m);
-	}, vm);
+  using IndexContainer = std::array<indices_t, 1u + sizeof...(tail_indices_t)>;
+  return { std::move(source), IndexContainer {index0, tailIndices...}, params, cov };
 }
 
 }  // namespace Acts
