@@ -113,6 +113,12 @@ class BitField64 {
          */
 	void setValue(int64_t value) { _value = value; }
         /**
+ 	 * @brief Sets the value of one of the components of the bitfield.
+ 	 * @param fieldName The string associated with the field.
+ 	 * @param value The value to fill the field with
+ 	 */
+	void setFieldValue(const std::string& fieldName, int64_t value);
+	/**
          * @brief Resets the bitfield to zero.
          */
 	void reset() { _value = 0; }

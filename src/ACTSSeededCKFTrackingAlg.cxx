@@ -56,22 +56,21 @@ StatusCode ACTSSeededCKFTrackingAlg::initialize() {
 	StatusCode init = ACTSAlgBase::initialize();
 
 	// Initialize timing histograms
-//	SmartIF<ITHistSvc> histSvc = service("THistSvc").as<ITHistSvc>();
-//	if (!histSvc) {
-  //  	  error() << "Failed to retrieve THistSvc" << endmsg;
-    //	  return StatusCode::FAILURE;
-//	}
-
+        ITHistSvc* histSvc{nullptr};
+        StatusCode sc1 = service("THistSvc", histSvc);
+        if ( sc1.isFailure() ) {
+                error() << "Could not locate HistSvc" << endmsg;
+                return StatusCode::FAILURE; }
 	
-//	m_histHitSetUp = new TH1F("TrackhitTime", "Time to Set Hits;Time", 20, 0, 10);
-  //      m_histEntireReco = new TH1F("RecoTime", "Time for Entire Reco;Time", 20, 0 , 20);
-    //    m_histSeedFinding = new TH1F("SeedTime", "Time to Find Seeds;Time", 20, 0, 10);
-      //  m_histTrackBuild = new TH1F("TrackTime", "Time to Build Tracks;Time", 20, 0, 10);
+	m_histHitSetUp = new TH1F("TrackhitTime", "Time to Set Hits;Time", 20, 0, 10);
+        m_histEntireReco = new TH1F("RecoTime", "Time for Entire Reco;Time", 20, 0 , 20);
+        m_histSeedFinding = new TH1F("SeedTime", "Time to Find Seeds;Time", 20, 0, 10);
+        m_histTrackBuild = new TH1F("TrackTime", "Time to Build Tracks;Time", 20, 0, 10);
 
-//	(void)histSvc->regHist("/histos/timing/track_hits", m_histHitSetUp);
-//	(void)histSvc->regHist("/histos/timing/entire_reco", m_histEntireReco);
-//	(void)histSvc->regHist("/histos/timing/seed_finding", m_histSeedFinding);
-//	(void)histSvc->regHist("/histos/timing/track_building", m_histTrackBuild);
+	(void)histSvc->regHist("/histos/timing/track_hits", m_histHitSetUp);
+	(void)histSvc->regHist("/histos/timing/entire_reco", m_histEntireReco);
+	(void)histSvc->regHist("/histos/timing/seed_finding", m_histSeedFinding);
+	(void)histSvc->regHist("/histos/timing/track_building", m_histTrackBuild);
 
 	// Initialize seeding layers
 	std::vector<std::string> seedingLayers;

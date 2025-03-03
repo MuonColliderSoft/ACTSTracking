@@ -50,6 +50,7 @@ edm4hep::MutableTrack* ACTS2edm4hep_track(const TrackResult& fitter_res,
 	// Basic properties
 	track->setChi2(fitter_res.chi2());
 	track->setNdf(fitter_res.nDoF());
+	track->setNholes(fitter_res.nHoles());
 
 	// ACTS magnetic field	
 	const Acts::Vector3 zeroPos(0, 0, 0);

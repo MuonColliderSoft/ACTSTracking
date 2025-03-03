@@ -62,6 +62,16 @@ BitFieldValue::BitFieldValue(int64_t& bitfield, const std::string& theName, unsi
         return *_fields.at(theIndex);
     }
 
+    void BitField64::setFieldValue(const std::string& fieldName, int64_t value) {
+        auto it = _map.find(fieldName);
+        if (it == _map.end()) {
+            throw std::runtime_error("BitField64: unknown field name");
+        }
+ 
+        unsigned int fieldIndex = it->second;
+        (*this)[fieldIndex] = value;
+    }
+
     size_t BitField64::index(const std::string& name) const {
         auto it = _map.find(name);
         if (it != _map.end()) {

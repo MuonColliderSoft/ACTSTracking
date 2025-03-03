@@ -1,8 +1,8 @@
-# Install script for directory: /isilon/export/home/sferrar2/TrackPerfWorkspace/packages/ACTSTracking/data
+# Install script for directory: /home/sferrar2/Mar2Gau/TrackPerfWorkspace/packages/ACTSTracking/data
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
-  set(CMAKE_INSTALL_PREFIX "/isilon/export/home/sferrar2/TrackPerfWorkspace/install")
+  set(CMAKE_INSTALL_PREFIX "/home/sferrar2/Mar2Gau/digiInstall")
 endif()
 string(REGEX REPLACE "/$" "" CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
@@ -37,16 +37,22 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "FALSE")
 endif()
 
-# Set default install directory permissions.
+# Set path to fallback-tool for dependency-resolution.
 if(NOT DEFINED CMAKE_OBJDUMP)
   set(CMAKE_OBJDUMP "/usr/bin/objdump")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ACTSTracking/data" TYPE FILE FILES "/isilon/export/home/sferrar2/TrackPerfWorkspace/packages/ACTSTracking/data/MuColl_v1.root")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ACTSTracking/data" TYPE FILE FILES "/home/sferrar2/Mar2Gau/TrackPerfWorkspace/packages/ACTSTracking/data/MuColl_v1.root")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT STREQUAL "Unspecified" OR NOT CMAKE_INSTALL_COMPONENT)
-  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ACTSTracking/data" TYPE FILE FILES "/isilon/export/home/sferrar2/TrackPerfWorkspace/packages/ACTSTracking/data/material-maps.json")
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/share/ACTSTracking/data" TYPE FILE FILES "/home/sferrar2/Mar2Gau/TrackPerfWorkspace/packages/ACTSTracking/data/material-maps.json")
 endif()
 
+string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
+       "${CMAKE_INSTALL_MANIFEST_FILES}")
+if(CMAKE_INSTALL_LOCAL_ONLY)
+  file(WRITE "/home/sferrar2/Mar2Gau/TrackPerfWorkspace/packages/ACTSTracking/data/install_local_manifest.txt"
+     "${CMAKE_INSTALL_MANIFEST_CONTENT}")
+endif()

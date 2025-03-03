@@ -47,7 +47,7 @@ std::tuple<edm4hep::TrackMCParticleLinkCollection> TrackTruthAlg::operator()(
 					break;
 				}
 			}
-			if (simHit->getParticle().isAvailable()) {
+			if (simHit && simHit->getParticle().isAvailable()) {
 				trackHit2Mc[simHit->getParticle()]++; //Increment MC Particle counter
 			}
 		}
