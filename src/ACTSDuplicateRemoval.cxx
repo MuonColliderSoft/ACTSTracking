@@ -63,6 +63,9 @@ ACTSDuplicateRemoval::ACTSDuplicateRemoval()
                            "Name of track output collection",
                            _outputTrackCollection,
                            std::string("DedupedTruthTracks"));
+
+  registerProcessorParameter("ThetaTolerance", "Tolerance for theta in percentage.",
+                             theta_tolerance, 0.01f);
 }
 
 void ACTSDuplicateRemoval::init() {
@@ -101,10 +104,24 @@ void ACTSDuplicateRemoval::processEvent(LCEvent* evt) {
   // adding it only if a matching track (50% shared hits)
   // is not found.
   std::vector<EVENT::Track*> finalTracks;
+  int t_bound = 0;
+
   for (EVENT::Track* myTrk : sortedInput) {
     bool foundAnEqual = false;
-    for (int i = (finalTracks.size() >= 10) ? finalTracks.size() - 10 : 0;
-         i < finalTracks.size(); ++i) {
+
+    // TODO check for tan_lambda = inf
+    float tmptl = myTrk->getTrackState(TrackState::AtIP)->getTanLambda();
+    float low_theta = tmptl >= 0 ? (1 - theta_tolerance) * tmptl :
+        (1 + theta_tolerance) * tmptl;
+
+    while (finalTracks.size() > t_bound and
+        low_theta > finalTracks[t_bound]->getTrackState(TrackState::AtIP)->getTanLambda())
+    {
+      t_bound++;
+    }
+
+    for (int i = t_bound; i < finalTracks.size(); ++i)
+    {
       EVENT::Track* otherTrk = finalTracks[i];
 
       // Skip tracks that are not equal

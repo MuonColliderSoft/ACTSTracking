@@ -43,6 +43,8 @@ class ACTSDuplicateRemoval : public marlin::Processor {
  private:
   std::string _inputTrackCollection;
   std::string _outputTrackCollection;
+
+  float theta_tolerance;
 };
 
 namespace ACTSTracking {
