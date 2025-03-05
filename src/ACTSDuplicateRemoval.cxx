@@ -6,6 +6,7 @@
 #include <IMPL/LCFlagImpl.h>
 
 #include <algorithm>
+#include <cmath>
 
 namespace ACTSTracking {
 /**
@@ -64,8 +65,8 @@ ACTSDuplicateRemoval::ACTSDuplicateRemoval()
                            _outputTrackCollection,
                            std::string("DedupedTruthTracks"));
 
-  registerProcessorParameter("ThetaTolerance", "Tolerance for theta in percentage.",
-                             theta_tolerance, 0.01f);
+  registerProcessorParameter("ThetaTolerance", "Tolerance for theta in rad.",
+                             theta_tolerance, 0.01f * static_cast<float>(M_PI));
 }
 
 void ACTSDuplicateRemoval::init() {
@@ -109,10 +110,9 @@ void ACTSDuplicateRemoval::processEvent(LCEvent* evt) {
   for (EVENT::Track* myTrk : sortedInput) {
     bool foundAnEqual = false;
 
-    // TODO check for tan_lambda = inf
-    float tmptl = myTrk->getTrackState(TrackState::AtIP)->getTanLambda();
-    float low_theta = tmptl >= 0 ? (1 - theta_tolerance) * tmptl :
-        (1 + theta_tolerance) * tmptl;
+    float l_angle = std::atan(myTrk->getTrackState(TrackState::AtIP)->getTanLambda());
+    l_angle -= theta_tolerance;    
+    float low_theta = std::tan(std::max(l_angle, -0.5f * static_cast<float>(M_PI)));
 
     while (finalTracks.size() > t_bound and
         low_theta > finalTracks[t_bound]->getTrackState(TrackState::AtIP)->getTanLambda())
