@@ -22,14 +22,20 @@ TrackTruthAlg::TrackTruthAlg(const std::string& name, ISvcLocator* svcLoc) : Mul
 std::tuple<edm4hep::TrackMCParticleLinkCollection> TrackTruthAlg::operator()(
 			const edm4hep::TrackCollection& tracks,
                         const edm4hep::TrackerHitSimTrackerHitLinkCollection& trackerHitRelations) const{
+	MsgStream log(msgSvc(), name());
+	log << MSG::DEBUG << trackerHitRelations.size() << endmsg;
+
 	// Map TrackerHits to SimTrackerHits
 	std::map<edm4hep::TrackerHit, edm4hep::SimTrackerHit> trackerHit2SimHit;
 	for (const auto& hitRel : trackerHitRelations) {
 		edm4hep::TrackerHit trackerHit = hitRel.getFrom();
 		edm4hep::SimTrackerHit simTrackerHit = hitRel.getTo();
+		log << MSG::DEBUG <<"Hit:\n"<< trackerHit <<endmsg;
+		log<< MSG::DEBUG << "Sim:\n"<<simTrackerHit<<endmsg;
 		trackerHit2SimHit[trackerHit] = simTrackerHit;
 	}
 
+	log << MSG::DEBUG << "Map size: " << trackerHit2SimHit.size() << endmsg;
 	// Map best matches MCP to Track
 	std::map<edm4hep::MCParticle, edm4hep::Track> mcBestMatchTrack;
 	std::map<edm4hep::MCParticle, float> mcBestMatchFrac;
@@ -40,8 +46,10 @@ std::tuple<edm4hep::TrackMCParticleLinkCollection> TrackTruthAlg::operator()(
 		for (auto& hit : track.getTrackerHits()) {
 			//Search for SimHit
 			const edm4hep::SimTrackerHit* simHit = nullptr;
+			log << MSG::DEBUG << "hit:\n" << hit <<endmsg;
 			/// @TODO: I am not happy with this. Again an edm4hep problem
 			for (const auto& pair : trackerHit2SimHit) {
+				log << MSG::DEBUG << "sim:\n" << pair.first<<endmsg;
 				if (pair.first == hit) {
 					simHit = (&pair.second);
 					break;
