@@ -75,14 +75,14 @@ GeometryIdMappingTool::GeometryIdMappingTool(const std::string& encoderString)
 uint64_t GeometryIdMappingTool::getGeometryID(const edm4hep::SimTrackerHit& hit) {
 	// Decode Cell ID
 	uint64_t cellID = hit.getCellID();
-	m_decoder.setValue(cellID);
 
 	// Encode ACTS ID
-	return getGeometryID(m_decoder("system").value(), 
-			     m_decoder("layer").value(), 
-			     m_decoder("side").value(),
-			     m_decoder("module").value(),
-			     m_decoder("sensor").value());
+	return getGeometryID(
+           m_decoder.get(cellID, "system"), 
+			     m_decoder.get(cellID, "layer"), 
+			     m_decoder.get(cellID, "side"),
+			     m_decoder.get(cellID, "module"),
+			     m_decoder.get(cellID, "sensor"));
 }
 
 uint64_t GeometryIdMappingTool::getGeometryID(const edm4hep::TrackerHitPlane& hit) {
@@ -94,15 +94,14 @@ uint64_t GeometryIdMappingTool::getGeometryID(const edm4hep::TrackerHit& hit) {
 }
 
 uint64_t GeometryIdMappingTool::getGeometryIDTrack(uint64_t cellID) {
-	// Decode Cell ID
-	m_decoder.setValue(cellID);
 
 	// Encode ACTS ID
-        return getGeometryID(m_decoder("system").value(),    
-                             m_decoder("layer").value(),
-                             m_decoder("side").value(),
-			     m_decoder("module").value(),
-                             m_decoder("sensor").value());
+  return getGeometryID(
+           m_decoder.get(cellID, "system"), 
+			     m_decoder.get(cellID, "layer"), 
+			     m_decoder.get(cellID, "side"),
+			     m_decoder.get(cellID, "module"),
+			     m_decoder.get(cellID, "sensor"));
 
 }
 

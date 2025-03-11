@@ -20,6 +20,7 @@
 #include <k4FWCore/DataHandle.h>
 #include <k4FWCore/BaseClass.h>
 #include <k4FWCore/Transformer.h>
+#include <k4Interface/IGeoSvc.h>
 
 // Standard
 #include <tuple>
@@ -78,6 +79,10 @@ protected:
 	//! Path to tracker geometry file
 	Gaudi::Property<std::string> m_tgeoFile{this, "TGeoFile", std::string(""), "Path to the tracker geometry file."};
 
+	//! Encoding String for Tracker CellIDs
+	Gaudi::Property<std::string> m_encodingStringVariable{this, "EncodingStringParameterName", "GlobalTrackerReadoutID", "The name of the DD4hep constant that contains the Encoding string for the detector"};
+
+
 	/**
  	 * @brief Gets the geometry Mapping Tool (To decode Cell IDs)
  	 * @return ACTSTracking Geometry Mapping Tool
@@ -129,6 +134,8 @@ private:
 	std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry = nullptr; ///< Tracking Geometry
 
 	Acts::CalibrationContext m_calibrationContext; ///< Calibration Context
+
+	SmartIF<IGeoSvc> m_geoSvc;
 };
 
 #endif

@@ -35,7 +35,10 @@ ACTSAlgBase::ACTSAlgBase(const std::string& name, ISvcLocator* svcLoc) : MultiTr
     name, svcLoc,
     		{ KeyValues("InputTrackerHitCollectionName", {"TrackerHits"}) }, {
 		  KeyValues("OutputSeedCollectionName", {"SeedTracks"}),
-		  KeyValues("OutputTrackCollectionName", {"Tracks"}) }) {}
+		  KeyValues("OutputTrackCollectionName", {"Tracks"}) }) 
+{
+  m_geoSvc = serviceLocator()->service("GeoSvc");  // important to initialize m_geoSvc
+}
 
 
 
@@ -86,7 +89,10 @@ StatusCode ACTSAlgBase::initialize() {
 	log << MSG::INFO << " -------------------------------------" << endmsg;
 
 	// Initialize mapping tool
-	m_geoIDMappingTool = std::make_shared<GeometryIdMappingTool>("system:5,side:-2,layer:6,module:11,sensor:8");
+  std::string initString;
+  initString = m_geoSvc->constantAsString(m_encodingStringVariable.value());
+
+	m_geoIDMappingTool = std::make_shared<GeometryIdMappingTool>(initString);
 	return StatusCode::SUCCESS;
 }
 

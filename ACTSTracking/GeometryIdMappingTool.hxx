@@ -5,8 +5,8 @@
 #include <edm4hep/TrackerHit.h>
 #include <edm4hep/TrackerHitPlane.h>
 
-// ACTSTracking
-#include "CellIDDecoder.hxx"
+// DD4hep
+#include <DDSegmentation/BitFieldCoder.h>
 
 // Standard
 #include <string>
@@ -72,7 +72,7 @@ m4hep
 
 private:
 	/// Tool used to decode Cell IDs with encoder string
-	CellIDDecoder m_decoder;
+	dd4hep::DDSegmentation::BitFieldCoder m_decoder;
 
 	/// Volume map to detector sections
 	static const std::unordered_map<int32_t, uint32_t> VolumeMap;
