@@ -77,16 +77,15 @@ StatusCode ACTSAlgBase::initialize() {
 	m_matFile = findFile(m_matFile);
 	m_tgeoFile = findFile(m_tgeoFile);
 
-	MsgStream log(msgSvc(), name());
-	// Load geometry
-	log << MSG::INFO << " -------------------------------------" << endmsg;
+  // Load geometry
+	info() << " -------------------------------------" << endmsg;
 
-	log << MSG::INFO << " -- Building magnetic field" << endmsg;
+	info() << " -- Building magnetic field" << endmsg;
 	buildBfield();
-	log << MSG::INFO << " -- Building tracking detector" << endmsg;
+	info() << " -- Building tracking detector" << endmsg;
 	buildDetector();
 
-	log << MSG::INFO << " -------------------------------------" << endmsg;
+	info() << " -------------------------------------" << endmsg;
 
 	// Initialize mapping tool
   std::string initString;

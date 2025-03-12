@@ -52,7 +52,7 @@ public:
          * @return A tuple of Track Collections: The reconstructed tracks and the seeds that led to those tracks
          */
         std::tuple<edm4hep::TrackCollection, 
-		   edm4hep::TrackCollection> operator()(const edm4hep::TrackerHitPlaneCollection& trackerHitCollection) const;
+		           edm4hep::TrackCollection> operator()(const edm4hep::TrackerHitPlaneCollection& trackerHitCollection) const;
 
 protected:
 	/**

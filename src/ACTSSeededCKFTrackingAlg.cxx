@@ -49,15 +49,13 @@ ACTSSeededCKFTrackingAlg::ACTSSeededCKFTrackingAlg(const std::string& name, ISvc
 	: ACTSAlgBase(name, svcLoc) {}
 
 StatusCode ACTSSeededCKFTrackingAlg::initialize() {
-	// Set up a message service
-	MsgStream log(msgSvc(), name());
-	log << MSG::INFO << "Initializing ACTSSeededCKFTrackingAlg" << endmsg;
+	info() << "Initializing ACTSSeededCKFTrackingAlg" << endmsg;
 	// Initialize the base
 	StatusCode init = ACTSAlgBase::initialize();
 
 	// Initialize timing histograms
 	SmartIF<ITHistSvc> histSvc;
-	histSvc = serviceLocator()->service("HistSvc");
+	histSvc = serviceLocator()->service("THistSvc");
 
 	m_histHitSetUp = new TH1F("TrackhitTime", "Time to Set Hits;Time", 20, 0, 10);
     m_histEntireReco = new TH1F("RecoTime", "Time for Entire Reco;Time", 20, 0 , 20);
@@ -192,8 +190,7 @@ std::tuple<edm4hep::TrackCollection,
 		}
 	}
 	
-	MsgStream log(msgSvc(), name());
-	log << MSG::INFO << "Created " << spacePoints.size() << " space points" << endmsg;
+	info() << "Created " << spacePoints.size() << " space points" << endmsg;
 
 	auto hitEnd = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double> hitDuration = hitEnd - hitStart;
@@ -320,7 +317,7 @@ std::tuple<edm4hep::TrackCollection,
 				gridCfg.zBinEdges[k] = pos;
 			}
 			else {
-				log << MSG::WARNING << "Wrong parameter SeedFinding_zBinEdges; " << "default used" <<endmsg;
+				warning() << "Wrong parameter SeedFinding_zBinEdges; " << "default used" <<endmsg;
 				gridCfg.zBinEdges.clear();
 				break;
 			}
@@ -388,7 +385,7 @@ std::tuple<edm4hep::TrackCollection,
 			const Acts::GeometryIdentifier& geoId = sourceLink.geometryId();
 			const Acts::Surface* surface = trackingGeometry()->findSurface(geoId);
 			if (surface == nullptr) {
-				log << MSG::INFO << "surface with geoID " << geoId << " is not found in the tracking gemetry" << endmsg;
+				info() << "surface with geoID " << geoId << " is not found in the tracking gemetry" << endmsg;
 				continue;
 			}
 
@@ -402,7 +399,7 @@ std::tuple<edm4hep::TrackCollection,
 			std::optional<Acts::BoundVector> optParams = Acts::estimateTrackParamsFromSeed(geometryContext(),
 				seed.sp().begin(), seed.sp().end(), *surface, *seedField, 0.1_T);
 			if (!optParams.has_value()) {
-				log << MSG::INFO << "Failed estimation of track parameters for seed." << endmsg;
+				info() << "Failed estimation of track parameters for seed." << endmsg;
 				continue;
 			}
 
@@ -446,10 +443,10 @@ std::tuple<edm4hep::TrackCollection,
 
 			seedTrack.addToTrackStates(*seedTrackState);
 
-			log << MSG::DEBUG << "Seed Paramemeters" << std::endl << paramseed << endmsg;
+			debug() << "Seed Paramemeters" << std::endl << paramseed << endmsg;
 		}
 
-		log << MSG::DEBUG << "Seeds found: " << std::endl << paramseeds.size() << endmsg;
+		debug() << "Seeds found: " << std::endl << paramseeds.size() << endmsg;
 		
 		auto seedEnd = std::chrono::high_resolution_clock::now();
 		std::chrono::duration<double> seedDuration = seedEnd - seedStart;
@@ -475,13 +472,13 @@ std::tuple<edm4hep::TrackCollection,
 				const auto& fitOutput = result.value();
 				for (const TrackContainer::TrackProxy& trackTip : fitOutput) {
 					// Helpful debug output
-					log << MSG::DEBUG << "Trajectory Summary" << endmsg;
-					log << MSG::DEBUG << "\tchi2Sum       " << trackTip.chi2() << endmsg;
-					log << MSG::DEBUG << "\tNDF           " << trackTip.nDoF() << endmsg;
-					log << MSG::DEBUG << "\tnHoles        " << trackTip.nHoles() << endmsg;
-					log << MSG::DEBUG << "\tnMeasurements " << trackTip.nMeasurements() << endmsg;
-					log << MSG::DEBUG << "\tnOutliers     " << trackTip.nOutliers() << endmsg;
-					log << MSG::DEBUG << "\tnStates       " << trackTip.nTrackStates() << endmsg;
+					debug() << "Trajectory Summary" << endmsg;
+					debug() << "\tchi2Sum       " << trackTip.chi2() << endmsg;
+					debug() << "\tNDF           " << trackTip.nDoF() << endmsg;
+					debug() << "\tnHoles        " << trackTip.nHoles() << endmsg;
+					debug() << "\tnMeasurements " << trackTip.nMeasurements() << endmsg;
+					debug() << "\tnOutliers     " << trackTip.nOutliers() << endmsg;
+					debug() << "\tnStates       " << trackTip.nTrackStates() << endmsg;
 
 					// Make track object
 					edm4hep::MutableTrack* track = ACTSTracking::ACTS2edm4hep_track(trackTip, magneticField(), magCache);
@@ -491,7 +488,7 @@ std::tuple<edm4hep::TrackCollection,
 					
 				}
 			} else {
-				log << MSG::WARNING << "Track fit error: " << result.error() << endmsg;
+				warning() << "Track fit error: " << result.error() << endmsg;
 			}
 		}
 		
@@ -504,7 +501,7 @@ std::tuple<edm4hep::TrackCollection,
 	auto entireEnd = std::chrono::high_resolution_clock::now();	
 	std::chrono::duration<double> entireDuration = entireEnd - entireStart;
 	//m_histEntireReco->Fill(entireDuration.count());
-	log << MSG::DEBUG << "Track Collection Size: " << trackCollection->size() << endmsg; 
+	debug() << "Track Collection Size: " << trackCollection->size() << endmsg; 
 	
 	return std::make_tuple(std::move(seedCollection), std::move(trackCollection));
 }
